@@ -95,4 +95,5 @@ class Follow(models.Model):
     )
 
     def __str__(self) -> str:
-        return str(self.user)
+        view_str = '/'.join([str(self.user), str(self.author)])
+        return view_str
