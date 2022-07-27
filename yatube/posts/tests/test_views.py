@@ -61,10 +61,6 @@ class PostViewTests(TestCase):
             text="RobotComment",
             post=cls.post,
         )
-        #cls.test_follow = Follow.objects.create(
-        #    user=cls.another_user,
-        #    author=cls.user
-        #)
 
     @classmethod
     def tearDownClass(cls):
@@ -82,7 +78,6 @@ class PostViewTests(TestCase):
         self.third_authorized_client = Client()
         self.third_authorized_client.force_login(PostViewTests.third_user)
         cache.clear()
-
 
     def test_page_obj_page_show_correct_context(self):
         """Шаблон page_obj сформирован с правильным контекстом."""
@@ -318,4 +313,3 @@ class PostViewTests(TestCase):
             test_post,
             response.context.get('page_obj').object_list
         )
-
