@@ -29,7 +29,7 @@ class Post(models.Model):
         User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name='author_posts'
+        related_name='posts'
     )
     group = models.ForeignKey(
         Group,
@@ -38,12 +38,13 @@ class Post(models.Model):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
-        related_name='group_posts'
+        related_name='posts'
     )
     image = models.ImageField(
         'Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        null=True,
     )
 
     def __str__(self):
@@ -58,13 +59,13 @@ class Comment(models.Model):
         Post,
         verbose_name='Пост',
         on_delete=models.CASCADE,
-        related_name='post_comments'
+        related_name='comments'
     )
     author = models.ForeignKey(
         User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name='author_comments'
+        related_name='comments'
     )
     text = models.TextField(
         verbose_name='Комментарий:',
@@ -97,3 +98,11 @@ class Follow(models.Model):
     def __str__(self) -> str:
         view_str = '/'.join([str(self.user), str(self.author)])
         return view_str
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "author"],
+                name="unique_follow",
+            )
+        ]

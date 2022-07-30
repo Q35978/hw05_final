@@ -3,6 +3,7 @@ from django.test import TestCase, Client, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.urls.base import reverse
+from django.core.cache import cache
 from ..models import Post, Group
 import shutil
 import tempfile
@@ -33,6 +34,19 @@ class PostFormTests(TestCase):
             author=cls.user,
             text='Test post',
         )
+        cls.url_create = reverse('posts:post_create')
+        cls.url_create_redirect = reverse(
+            "posts:profile",
+            kwargs={"username": PostFormTests.user.username},
+        )
+        cls.url_edit = reverse(
+            "posts:post_edit",
+            kwargs={"post_id": PostFormTests.post_with_group.id},
+        )
+        cls.url_edit_redirect = reverse(
+            "posts:post_detail",
+            kwargs={"post_id": PostFormTests.post_with_group.id},
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -44,11 +58,7 @@ class PostFormTests(TestCase):
         """Создаем авторизированный клиент"""
         self.authorized_client = Client()
         self.authorized_client.force_login(PostFormTests.user)
-        self.url_create = reverse('posts:post_create')
-        self.url_create_redirect = reverse(
-            "posts:profile",
-            kwargs={"username": PostFormTests.user.username},
-        )
+        cache.clear()
 
     def test_create_post_with_group(self):
         """Валидная форма создает запись в Post с указанием группы"""
@@ -73,13 +83,13 @@ class PostFormTests(TestCase):
             "image": uploaded,
         }
         response = self.authorized_client.post(
-            self.url_create,
+            PostFormTests.url_create,
             data=form_data,
             follow=True,
         )
         self.assertRedirects(
             response,
-            self.url_create_redirect,
+            PostFormTests.url_create_redirect,
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
         post = Post.objects.latest("id")
@@ -94,13 +104,13 @@ class PostFormTests(TestCase):
             "text": PostFormTests.post_without_group.text,
         }
         response = self.authorized_client.post(
-            self.url_create,
+            PostFormTests.url_create,
             data=form_data,
             follow=True,
         )
         self.assertRedirects(
             response,
-            self.url_create_redirect,
+            PostFormTests.url_create_redirect,
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
         post = Post.objects.latest("id")
@@ -108,23 +118,16 @@ class PostFormTests(TestCase):
 
     def test_edit_post(self):
         """Валидная форма редактирует запись в Post."""
-        url_edit = reverse(
-            "posts:post_edit",
-            kwargs={"post_id": PostFormTests.post_with_group.id},
-        )
-        url_edit_redirect = reverse(
-            "posts:post_detail",
-            kwargs={"post_id": PostFormTests.post_with_group.id},
-        )
+
         form_data = {"text": "Edited text"}
         response = self.authorized_client.post(
-            url_edit,
+            PostFormTests.url_edit,
             data=form_data,
             follow=True,
         )
         self.assertRedirects(
             response,
-            url_edit_redirect,
+            PostFormTests.url_edit_redirect,
         )
         edit_post = Post.objects.get(id=PostFormTests.post_with_group.id)
         self.assertEqual(edit_post.text, form_data["text"])

@@ -34,7 +34,7 @@ def index(request):
 def group_posts(request, slug):
     template_group_posts = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
-    posts = group.group_posts.all()
+    posts = group.posts.all()
     page_obj = get_paginator(request, posts)
     context = {
         'group': group,
@@ -50,16 +50,13 @@ def profile(request, username):
     template_profile = 'posts/profile.html'
     text = 'Профайл пользователя'
     author = get_object_or_404(User, username=username)
-    following = False
-    if request.user.is_authenticated:
-        following = request.user.follower.filter(author=author).exists()
-    posts_list = author.author_posts.all()
-    posts_count = posts_list.count()
+    following = (request.user.is_authenticated and
+                 request.user.follower.filter(author=author).exists())
+    posts_list = author.posts.all()
     page_obj = get_paginator(request, posts_list)
     context = {
         'text': text,
         'author': author,
-        'posts_count': posts_count,
         'page_obj': page_obj,
         'following': following,
     }
@@ -72,11 +69,11 @@ def post_detail(request, post_id):
     template_post = 'posts/post_detail.html'
     post_obj = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
-    comments = post_obj.post_comments.all()
+    comments = post_obj.comments.all()
     context = {
         'post': post_obj,
-        "form": form,
-        "comments": comments,
+        'form': form,
+        'comments': comments,
     }
     return render(request=request,
                   template_name=template_post,
