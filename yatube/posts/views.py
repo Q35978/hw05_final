@@ -50,8 +50,8 @@ def profile(request, username):
     template_profile = 'posts/profile.html'
     text = 'Профайл пользователя'
     author = get_object_or_404(User, username=username)
-    following = (request.user.is_authenticated and
-                 request.user.follower.filter(author=author).exists())
+    following = (request.user.is_authenticated
+                 and request.user.follower.filter(author=author).exists())
     posts_list = author.posts.all()
     page_obj = get_paginator(request, posts_list)
     context = {
